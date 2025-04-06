@@ -15,9 +15,9 @@ class LaravelMigrate extends BaseCommand
     protected $group       = 'Database';
     protected $name        = 'laravel-migrate';
     protected $description = 'Runs Laravel migrations in CodeIgniter 4';
-    protected $usage       = 'laravel-migrate [up|down|refresh|status]';
+    protected $usage       = 'laravel-migrate [up|down|refresh|status|fresh]';
     protected $arguments   = [
-        'action' => 'The action to perform: up, down, refresh, or status (default: up)',
+        'action' => 'The action to perform: up, down, refresh, status, or fresh (default: up)',
     ];
     protected $options    = [];
     protected $capsule;
@@ -135,10 +135,56 @@ class LaravelMigrate extends BaseCommand
             case 'status':
                 $this->handleStatusAction();
                 break;
+            case 'fresh':
+                $this->handleFreshAction();
+                break;
             default:
                 $this->showUsage();
                 break;
         }
+    }
+
+    private function handleFreshAction()
+    {
+        CLI::write('Dropping all tables...', 'yellow');
+        $this->dropAllTables();
+        
+        // Recreate migrations table
+        CLI::write('Recreating migrations table...', 'yellow');
+        $this->setupRepository(); 
+        
+        CLI::write('Running all migrations...', 'yellow');
+        $this->handleUpAction();
+        CLI::write('Database has been freshened.', 'green');
+    }
+
+    /**
+     * Drop all database tables
+     */
+    private function dropAllTables()
+    {
+        $connection = $this->capsule->getConnection();
+        $schema = $connection->getSchemaBuilder();
+        $driver = $connection->getDriverName();
+
+        // Disable foreign key checks
+        if ($driver === 'mysql') {
+            $connection->statement('SET FOREIGN_KEY_CHECKS=0;');
+        } elseif ($driver === 'sqlite') {
+            $connection->statement('PRAGMA foreign_keys = OFF;');
+        }
+
+        // Drop all tables
+        $schema->dropAllTables();
+
+        // Re-enable foreign key checks
+        if ($driver === 'mysql') {
+            $connection->statement('SET FOREIGN_KEY_CHECKS=1;');
+        } elseif ($driver === 'sqlite') {
+            $connection->statement('PRAGMA foreign_keys = ON;');
+        }
+
+        CLI::write('Dropped all tables successfully.', 'green');
     }
 
     /**
@@ -259,10 +305,11 @@ class LaravelMigrate extends BaseCommand
      */
     private function showUsage(): void
     {
-        CLI::write('Usage: php spark laravel-migrate [up|down|refresh|status]', 'yellow');
+        CLI::write('Usage: php spark laravel-migrate [up|down|refresh|status|fresh]', 'yellow');
         CLI::write('  up     : Run all pending Laravel migrations');
         CLI::write('  down   : Roll back the last batch of Laravel migrations');
         CLI::write('  refresh: Roll back and re-run all Laravel migrations');
         CLI::write('  status : Show the status of Laravel migrations');
+        CLI::write('  fresh  : Drop all tables and re-run all Laravel migrations');
     }
 }

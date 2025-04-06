@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Config\Eloquent;
+use App\Libraries\LaravelValidator;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -26,5 +27,14 @@ class Services extends BaseService
             return static::getSharedInstance('eloquent');
         }
         return new Eloquent();
+    }
+
+    public static function laravelValidator($getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('laravelValidator');
+        }
+        
+        return new LaravelValidator();
     }
 }
