@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Jenssegers\Blade\Blade;
 
 /**
@@ -15,6 +16,17 @@ function blade_view($view, $data = [])
     $cachePath = FCPATH . 'writable/cache';
 
     $blade = new Blade($viewsPath, $cachePath);
+
+    // Initialize basic Paginator configuration
+    \Illuminate\Pagination\Paginator::useBootstrap();
+
+    // Process any paginator objects to add custom rendering
+    foreach ($data as $key => $value) {
+        if ($value instanceof LengthAwarePaginator) {
+            // Add the pagination renderer to the data
+            $data[$key]->linksHtml = render_pagination($value);
+        }
+    }
 
     // Add custom @error directive 
     $blade->directive('error', function ($expression) {
