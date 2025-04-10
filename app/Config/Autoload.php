@@ -90,5 +90,12 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $helpers = ['blade_helper.php'];
+    public $helpers = [
+        'blade_helper.php',
+        'asset_helper.php',
+        'render_eloquent_pagination_helper.php',
+        'route_active_checker_helper.php',
+        'auth_helper.php',
+        'authorization_helper.php',
+    ];
 }

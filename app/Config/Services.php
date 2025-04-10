@@ -37,4 +37,16 @@ class Services extends BaseService
         
         return new LaravelValidator();
     }
+
+    public static function authorization($getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('authorization');
+        }
+
+        $provider = new \App\Libraries\AuthServiceProvider();
+        $provider->register();
+
+        return gate();
+    }
 }

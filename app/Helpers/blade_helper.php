@@ -1,4 +1,5 @@
 <?php
+// app/Helpers/BladeHelper.php
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Jenssegers\Blade\Blade;
@@ -33,6 +34,24 @@ function blade_view($view, $data = [])
             $data[$key]->linksHtml = render_pagination($value, $theme);
         }
     }
+
+    // Can directive
+    $blade->directive('can', function ($expression) {
+        return "<?php if(can($expression)): ?>";
+    });
+
+    $blade->directive('endcan', function () {
+        return "<?php endif; ?>";
+    });
+
+    // Cannot directive
+    $blade->directive('cannot', function ($expression) {
+        return "<?php if(cannot($expression)): ?>";
+    });
+
+    $blade->directive('endcannot', function () {
+        return "<?php endif; ?>";
+    });
 
     // Add custom @error directive 
     $blade->directive('error', function ($expression) {
