@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Traits\AuthorizationTrait;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
@@ -21,6 +22,7 @@ use Psr\Log\LoggerInterface;
  */
 abstract class BaseController extends Controller
 {
+    use AuthorizationTrait;
     /**
      * Instance of the main Request object.
      *
