@@ -20,9 +20,8 @@
 # APP
 #--------------------------------------------------------------------
 
-# app.baseURL = ''
 # If you have trouble with `.`, you could also use `_`.
-# app_baseURL = ''
+# app.baseURL = 'http://localhost:8080/'
 # app.forceGlobalSecureRequests = false
 # app.CSPEnabled = false
 
