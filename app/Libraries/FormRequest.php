@@ -17,11 +17,24 @@ abstract class FormRequest
         $this->validator = new LaravelValidator();
         $this->data = $this->request->getPost();
         
+        // Apply preparation before validation
+        $this->prepareForValidation();
+        
         // Automatically validate on instantiation
         $this->validate();
     }
     
     abstract public function rules();
+    
+    /**
+     * Prepare the data for validation.
+     * Override this method in your request classes to manipulate input data.
+     */
+    protected function prepareForValidation()
+    {
+        // This method can be overridden in child classes
+        // By default, it does nothing
+    }
     
     public function messages()
     {
@@ -33,9 +46,20 @@ abstract class FormRequest
         return [];
     }
     
+    /**
+     * Get the validation data
+     */
     public function getData()
     {
         return $this->data;
+    }
+    
+    /**
+     * Set or modify validation data
+     */
+    protected function setData(array $data)
+    {
+        $this->data = $data;
     }
     
     public function validate()
