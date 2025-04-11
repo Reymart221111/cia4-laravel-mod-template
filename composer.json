@@ -12,11 +12,13 @@
     "require": {
         "php": "^8.1 || ^8.2 || ^8.3 || ^8.4",
         "codeigniter4/framework": "^4.0",
+        "guzzlehttp/guzzle": "^7.9",
         "illuminate/collections": "==10.0",
         "illuminate/container": "==10.0",
         "illuminate/contracts": "==10.0",
         "illuminate/database": "^10.38",
         "illuminate/events": "==10.0",
+        "illuminate/http": "^10.48",
         "illuminate/pagination": "^10.48",
         "illuminate/validation": "^10.48",
         "illuminate/view": "==10.0",
