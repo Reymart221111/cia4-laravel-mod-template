@@ -2,7 +2,7 @@
 
 use Jenssegers\Blade\Blade;
 use App\Libraries\BladeExtension;
-
+use Illuminate\Pagination\Paginator;
 
 /**
  * Load a view file using Blade templating
@@ -18,7 +18,7 @@ function blade_view($view, $data = [])
     $blade = new Blade($viewsPath, $cachePath);
 
     // Initialize basic Paginator configuration
-    \Illuminate\Pagination\Paginator::useBootstrap();
+    Paginator::useBootstrap();
     
     // Process paginator objects and add Laravel-style errors handling
     $bladeExtension = new BladeExtension();

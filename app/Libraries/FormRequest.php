@@ -4,13 +4,48 @@ namespace App\Libraries;
 
 use App\Exceptions\ValidationException;
 
+/**
+ * Abstract FormRequest class for handling form validation
+ * 
+ * This class provides a structured way to validate form inputs
+ * with support for custom rules, messages, and data preparation.
+ */
 abstract class FormRequest
 {
+    /**
+     * The current HTTP request instance
+     * 
+     * @var \CodeIgniter\HTTP\IncomingRequest
+     */
     protected $request;
+    
+    /**
+     * The validator instance
+     * 
+     * @var \App\Libraries\LaravelValidator
+     */
     protected $validator;
+    
+    /**
+     * The data to be validated
+     * 
+     * @var array
+     */
     protected $data;
+    
+    /**
+     * The result of validation
+     * 
+     * @var array
+     */
     protected $validationResult;
     
+    /**
+     * Constructor for FormRequest
+     * 
+     * Initializes the request, validator, and data
+     * Then prepares and validates the data automatically
+     */
     public function __construct()
     {
         $this->request = \Config\Services::request();
@@ -24,11 +59,23 @@ abstract class FormRequest
         $this->validate();
     }
     
+    /**
+     * Define validation rules
+     * 
+     * Child classes must implement this method to specify
+     * the validation rules for their form fields
+     * 
+     * @return array
+     */
     abstract public function rules();
     
     /**
-     * Prepare the data for validation.
-     * Override this method in your request classes to manipulate input data.
+     * Prepare the data for validation
+     * 
+     * Override this method in child classes to manipulate input data
+     * before validation is performed
+     * 
+     * @return void
      */
     protected function prepareForValidation()
     {
@@ -36,11 +83,21 @@ abstract class FormRequest
         // By default, it does nothing
     }
     
+    /**
+     * Define custom error messages for validation rules
+     * 
+     * @return array
+     */
     public function messages()
     {
         return [];
     }
     
+    /**
+     * Define custom attribute names for validation fields
+     * 
+     * @return array
+     */
     public function attributes()
     {
         return [];
@@ -48,6 +105,8 @@ abstract class FormRequest
     
     /**
      * Get the validation data
+     * 
+     * @return array
      */
     public function getData()
     {
@@ -56,12 +115,20 @@ abstract class FormRequest
     
     /**
      * Set or modify validation data
+     * 
+     * @param array $data New data to set
+     * @return void
      */
     protected function setData(array $data)
     {
         $this->data = $data;
     }
     
+    /**
+     * Perform validation with current rules and data
+     * 
+     * @return bool True if validation passes, false otherwise
+     */
     public function validate()
     {
         $this->validationResult = $this->validator->validate(
@@ -74,16 +141,31 @@ abstract class FormRequest
         return $this->validationResult['success'];
     }
     
+    /**
+     * Check if validation has failed
+     * 
+     * @return bool True if validation failed, false otherwise
+     */
     public function fails()
     {
         return !($this->validationResult['success'] ?? false);
     }
     
+    /**
+     * Get only the validated data
+     * 
+     * @return array Array containing only validated fields
+     */
     public function validated()
     {
         return $this->validationResult['validated'] ?? [];
     }
     
+    /**
+     * Get validation errors by field
+     * 
+     * @return array Array of error messages keyed by field name
+     */
     public function errors()
     {
         return $this->validationResult['errorsByField'] ?? [];
@@ -91,6 +173,12 @@ abstract class FormRequest
     
     /**
      * Static constructor to create, validate, and automatically redirect on failure
+     * 
+     * This method creates an instance of the form request,
+     * validates it, and throws an exception if validation fails
+     * 
+     * @throws ValidationException When validation fails
+     * @return static The validated form request instance
      */
     public static function validateRequest()
     {
