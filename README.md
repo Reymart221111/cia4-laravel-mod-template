@@ -1,3 +1,6 @@
+## CodeIgniter 4-Laravel Mod Template
+This repository contains a template for Laravel developers who want to use CodeIgniter 4 as their backend framework. It provides a seamless integration of Laravel-like features into CodeIgniter, allowing developers to leverage the strengths of both frameworks. This template provides a starting point for developers who want to leverage the power of both frameworks while maintaining a consistent development experience. Syntax is similar to Laravel, making it easy for developers to switch between frameworks.
+
 # Features Template
 
 This template extends CodeIgniter 4 with Laravel-like features to provide a familiar development experience for Laravel developers. The integration brings popular Laravel functionalities while maintaining CodeIgniter's lightweight performance.
