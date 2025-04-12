@@ -1,68 +1,79 @@
-# CodeIgniter 4 Application Starter
+# Authorization: Gates and Policies
 
-## What is CodeIgniter?
+## Gates
+Gates provide a simple way to authorize user actions across your application. They are Closure-based approach to authorization.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+### Defining Gates
+Gates are defined in the `app/Libraries/AuthServiceProvider.php` file within the `register` method:
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+# CodeIgniter 4 with Laravel Features Template
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+This template extends CodeIgniter 4 with Laravel-like features for a more familiar development experience. The integration brings popular Laravel functionalities while maintaining CodeIgniter's lightweight nature.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## Added Features
 
-## Installation & updates
+### Laravel-style Commands
+Located in `app/Commands/`:
+- `LaravelMigrate.php` - Enhanced migration command
+- `MakeLaravelMigration.php` - Create Laravel-style migrations
+- `MakeLaravelModel.php` - Generate Laravel-compatible models
+- `MakeLaravelRequest.php` - Create form request validation classes
+# Make:Policy Command Documentation
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+The `make:policy` command generates authorization policy classes for your application, similar to Laravel's policy generator.
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+## Command Syntax
+- `MakePolicy.php` - Generate authorization policies
 
-## Setup
+### Configuration
+New configurations in `app/Config/`:
+- `Eloquent.php` - Laravel's Eloquent ORM configuration
+- Other standard CodeIgniter configs remain unchanged
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### Directory Structure
+Standard CodeIgniter 4 structure with added Laravel-specific directories:
+- `app/Facades/` - For Laravel-style facade patterns
+- `app/Traits/` - Shared trait files
 
-## Important Change with index.php
+## Usage
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### Creating Models
+```bash
+php spark make:laravel-model UserModel
+```
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+### Creating Migrations
+```bash
+php spark make:laravel-migration create_users_table
+```
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### Running Migrations
+```bash
+php spark laravel:migrate
+```
 
-## Repository Management
+### Creating Form Requests
+```bash
+php spark make:laravel-request UserRequest
+```
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+### Creating Policies
+```bash
+php spark make:policy UserPolicy
+```
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+## Requirements
+- PHP 8.1 or higher
+- CodeIgniter 4.x
+- Composer
 
-## Server Requirements
+## Installation
+1. Clone this repository
+2. Run `composer install`
+3. Copy `env` to `.env`
+4. Create your database on your database server eg. MySQL or PostgreSQL
+5. Configure your database in `.env`
+6. Run migrations: `php spark laravel:migrate`
 
-PHP version 8.1 or higher is required, with the following extensions installed:
-
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+## License
+This template is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
