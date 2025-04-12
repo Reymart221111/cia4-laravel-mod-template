@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HashedPasswordTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 
 class User extends Model
 {
+    use HashedPasswordTrait;
+    
     /**
      * The table associated with the model
      * 
@@ -20,13 +22,4 @@ class User extends Model
         'email',
         'password',
     ];
-
-    public function setPasswordAttribute($value)
-    {
-        if ($value && !password_get_info($value)['algo']) {
-            $this->attributes['password'] = password_hash($value, PASSWORD_DEFAULT);
-        } else {
-            $this->attributes['password'] = $value;
-        }
-    }
 }

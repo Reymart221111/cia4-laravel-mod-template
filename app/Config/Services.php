@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Config\Eloquent;
+use App\Libraries\Gate;
 use App\Libraries\LaravelValidator;
 use CodeIgniter\Config\BaseService;
 
@@ -21,7 +22,7 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    public static function eloquent($getShared = true)
+    public static function eloquent($getShared = true): Eloquent
     {
         if ($getShared) {
             return static::getSharedInstance('eloquent');
@@ -29,7 +30,7 @@ class Services extends BaseService
         return new Eloquent();
     }
 
-    public static function laravelValidator($getShared = true)
+    public static function laravelValidator($getShared = true): LaravelValidator
     {
         if ($getShared) {
             return static::getSharedInstance('laravelValidator');
@@ -38,7 +39,7 @@ class Services extends BaseService
         return new LaravelValidator();
     }
 
-    public static function authorization($getShared = true)
+    public static function authorization($getShared = true): Gate
     {
         if ($getShared) {
             return static::getSharedInstance('authorization');
