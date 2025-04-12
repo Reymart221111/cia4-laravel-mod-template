@@ -243,7 +243,11 @@ cp env .env
 ```
 
 4. Update database configuration in `.env`:
+
+use mysql, pgsql, sqlite, or sqlsrv as the configuration value for the database if you want to use eloquent features, else use CodeIgniter's default database configuration.
+
 ```
+database.default.DBDriver = mysql
 database.default.hostname = localhost
 database.default.database = your_database
 database.default.username = your_username
