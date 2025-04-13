@@ -229,7 +229,7 @@ class PostController extends BaseController
 
 1. Clone repository:
 ```bash
-git clone [repository-url]
+git clone https://github.com/Reymart221111/cia4-laravel-mod-template.git
 ```
 
 2. Install dependencies:
