@@ -1,8 +1,8 @@
 {
-    "name": "codeigniter4/appstarter",
-    "description": "CodeIgniter4 starter app",
+    "name": "reymart221111/cia4-laravel-mod-template",
+    "description": "A CodeIgniter 4 template with Laravel package integrations",
+    "type": "library",
     "license": "MIT",
-    "type": "project",
     "homepage": "https://codeigniter.com",
     "support": {
         "forum": "https://forum.codeigniter.com/",
