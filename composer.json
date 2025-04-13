@@ -1,7 +1,7 @@
 {
     "name": "reymart221111/cia4-laravel-mod-template",
     "description": "A CodeIgniter 4 template with Laravel package integrations",
-    "version": "v1.0.1",
+   "version": "1.0.1",
     "type": "project",
     "license": "MIT",
     "homepage": "https://codeigniter.com",
