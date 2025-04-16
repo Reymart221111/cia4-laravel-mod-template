@@ -18,28 +18,28 @@ abstract class FormRequest
      * @var \CodeIgniter\HTTP\IncomingRequest
      */
     protected $request;
-    
+
     /**
      * The validator instance
      * 
      * @var \App\Libraries\LaravelValidator
      */
     protected $validator;
-    
+
     /**
      * The data to be validated
      * 
      * @var array
      */
     protected $data;
-    
+
     /**
      * The result of validation
      * 
      * @var array
      */
     protected $validationResult;
-    
+
     /**
      * Constructor for FormRequest
      * 
@@ -51,14 +51,14 @@ abstract class FormRequest
         $this->request = \Config\Services::request();
         $this->validator = new LaravelValidator();
         $this->data = $this->request->getPost();
-        
+
         // Apply preparation before validation
         $this->prepareForValidation();
-        
+
         // Automatically validate on instantiation
         $this->validate();
     }
-    
+
     /**
      * Define validation rules
      * 
@@ -68,7 +68,7 @@ abstract class FormRequest
      * @return array
      */
     abstract public function rules();
-    
+
     /**
      * Prepare the data for validation
      * 
@@ -82,7 +82,7 @@ abstract class FormRequest
         // This method can be overridden in child classes
         // By default, it does nothing
     }
-    
+
     /**
      * Define custom error messages for validation rules
      * 
@@ -92,7 +92,7 @@ abstract class FormRequest
     {
         return [];
     }
-    
+
     /**
      * Define custom attribute names for validation fields
      * 
@@ -102,7 +102,7 @@ abstract class FormRequest
     {
         return [];
     }
-    
+
     /**
      * Get the validation data
      * 
@@ -112,7 +112,7 @@ abstract class FormRequest
     {
         return $this->data;
     }
-    
+
     /**
      * Set or modify validation data
      * 
@@ -123,7 +123,7 @@ abstract class FormRequest
     {
         $this->data = $data;
     }
-    
+
     /**
      * Perform validation with current rules and data
      * 
@@ -137,10 +137,10 @@ abstract class FormRequest
             $this->messages(),
             $this->attributes()
         );
-        
+
         return $this->validationResult['success'];
     }
-    
+
     /**
      * Check if validation has failed
      * 
@@ -150,17 +150,19 @@ abstract class FormRequest
     {
         return !($this->validationResult['success'] ?? false);
     }
-    
+
     /**
-     * Get only the validated data
+     * Get only the validated data as an object
      * 
-     * @return array Array containing only validated fields
+     * @param bool $asObject Whether to return as object (true) or array (false)
+     * @return mixed Object or array containing validated fields
      */
-    public function validated()
+    public function validated($asObject = false)
     {
-        return $this->validationResult['validated'] ?? [];
+        $data = $this->validationResult['validated'] ?? [];
+        return $asObject ? (object) $data : $data;
     }
-    
+
     /**
      * Get validation errors by field
      * 
@@ -170,7 +172,7 @@ abstract class FormRequest
     {
         return $this->validationResult['errorsByField'] ?? [];
     }
-    
+
     /**
      * Static constructor to create, validate, and automatically redirect on failure
      * 
@@ -183,15 +185,15 @@ abstract class FormRequest
     public static function validateRequest()
     {
         $instance = new static();
-        
+
         if ($instance->fails()) {
             $response = redirect()->back()
                 ->withInput()
                 ->with('errors', $instance->errors());
-            
+
             throw new ValidationException($response);
         }
-        
+
         return $instance;
     }
 }
