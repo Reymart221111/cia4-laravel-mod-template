@@ -52,6 +52,9 @@ abstract class FormRequest
         $this->validator = new LaravelValidator();
         $this->data = $this->request->getPost();
 
+        // Combine POST data and FILES
+        $this->data = array_merge($this->request->getPost(), $this->collectFiles());
+
         // Apply preparation before validation
         $this->prepareForValidation();
 
@@ -68,6 +71,37 @@ abstract class FormRequest
      * @return array
      */
     abstract public function rules();
+
+    /**
+     * Collect file uploads into the data array
+     *
+     * @return array
+     */
+    protected function collectFiles()
+    {
+        $files = [];
+        $uploadedFiles = $this->request->getFiles();
+
+        if (!empty($uploadedFiles)) {
+            foreach ($uploadedFiles as $fieldName => $fileInfo) {
+                // Handle multiple files with the same input name (arrays)
+                if (is_array($fileInfo)) {
+                    $files[$fieldName] = [];
+                    foreach ($fileInfo as $key => $file) {
+                        if ($file->isValid()) {
+                            $files[$fieldName][$key] = $file;
+                        }
+                    }
+                }
+                // Handle single file uploads
+                elseif ($fileInfo->isValid()) {
+                    $files[$fieldName] = $fileInfo;
+                }
+            }
+        }
+
+        return $files;
+    }
 
     /**
      * Prepare the data for validation
