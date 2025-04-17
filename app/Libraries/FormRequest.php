@@ -73,34 +73,79 @@ abstract class FormRequest
     abstract public function rules();
 
     /**
-     * Collect file uploads into the data array
-     *
-     * @return array
+     * Collect files from the request and format them for validation
+     * 
+     * This method processes uploaded files and formats them into a structure
+     * compatible with Laravel's validation system.
+     * 
+     * @return array Array of processed files
      */
     protected function collectFiles()
     {
         $files = [];
         $uploadedFiles = $this->request->getFiles();
 
-        if (!empty($uploadedFiles)) {
-            foreach ($uploadedFiles as $fieldName => $fileInfo) {
-                // Handle multiple files with the same input name (arrays)
-                if (is_array($fileInfo)) {
-                    $files[$fieldName] = [];
-                    foreach ($fileInfo as $key => $file) {
-                        if ($file->isValid()) {
-                            $files[$fieldName][$key] = $file;
-                        }
-                    }
-                }
-                // Handle single file uploads
-                elseif ($fileInfo->isValid()) {
-                    $files[$fieldName] = $fileInfo;
-                }
+        if (empty($uploadedFiles)) {
+            return $files;
+        }
+
+        foreach ($uploadedFiles as $fieldName => $fileInfo) {
+            if (is_array($fileInfo)) {
+                $files[$fieldName] = $this->processMultipleFiles($fileInfo);
+            } else {
+                $files[$fieldName] = $this->processSingleFile($fileInfo);
             }
         }
 
         return $files;
+    }
+
+    /**
+     * Process multiple files from the same input
+     * 
+     * @param array $fileInfoArray Array of uploaded files
+     * @return array Processed files in Laravel-compatible format
+     */
+    private function processMultipleFiles(array $fileInfoArray)
+    {
+        $processedFiles = [];
+
+        foreach ($fileInfoArray as $key => $file) {
+            if ($file->isValid()) {
+                $processedFiles[$key] = $this->formatFileData($file);
+            }
+        }
+
+        return $processedFiles;
+    }
+
+    /**
+     * Process a single file upload
+     * 
+     * @param object $file The uploaded file object
+     * @return array|null File in Laravel-compatible format or null if invalid
+     */
+    private function processSingleFile($file)
+    {
+        return $file->isValid() ? $this->formatFileData($file) : null;
+    }
+
+    /**
+     * Format file data into Laravel-compatible structure
+     * 
+     * @param object $file The uploaded file object
+     * @return array Formatted file data
+     */
+    private function formatFileData($file)
+    {
+        return [
+            'name' => $file->getName(),
+            'type' => $file->getClientMimeType(),
+            'size' => $file->getSize(),
+            'tmp_name' => $file->getTempName(),
+            'error' => 0,
+            '_ci_file' => $file // Store the original file for later use
+        ];
     }
 
     /**

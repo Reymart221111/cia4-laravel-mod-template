@@ -10,13 +10,168 @@ use Illuminate\Validation\DatabasePresenceVerifier;
 
 class LaravelValidator
 {
+    /**
+     * @var Factory The validation factory instance
+     */
     protected $factory;
-    
+
+    /**
+     * Initialize the Laravel validator
+     */
     public function __construct()
     {
-        // Create a translation loader with default messages
+        $this->initializeFactory();
+        $this->registerCustomValidators();
+        $this->setupDatabaseConnection();
+    }
+
+    /**
+     * Validate data against rules
+     *
+     * @param array $data Data to validate
+     * @param array $rules Validation rules
+     * @param array $messages Custom error messages (optional)
+     * @param array $attributes Custom attribute names (optional)
+     * @return array Result with success flag and errors if any
+     */
+    public function validate(array $data, array $rules, array $messages = [], array $attributes = [])
+    {
+        $validator = $this->factory->make($data, $rules, $messages, $attributes);
+
+        if ($validator->fails()) {
+            $errorsByField = [];
+            foreach ($validator->errors()->toArray() as $field => $messages) {
+                $errorsByField[$field] = $messages[0]; // Get only the first error message
+            }
+
+            return [
+                'success' => false,
+                'errors' => $validator->errors()->all(),
+                'errorsByField' => $errorsByField
+            ];
+        }
+
+        return [
+            'success' => true,
+            'validated' => $validator->validated()
+        ];
+    }
+
+    /**
+     * Initialize the validation factory with translations
+     */
+    private function initializeFactory()
+    {
         $loader = new ArrayLoader();
-        $loader->addMessages('en', 'validation', [
+        $loader->addMessages('en', 'validation', $this->getValidationMessages());
+
+        $translator = new Translator($loader, 'en');
+        $this->factory = new Factory($translator);
+    }
+
+    /**
+     * Register custom validators
+     */
+    private function registerCustomValidators()
+    {
+        $this->factory->extend('ci_image', function ($attribute, $value, $parameters, $validator) {
+            if (is_array($value) && isset($value['_ci_file'])) {
+                $file = $value['_ci_file'];
+                $tempPath = $file->getTempName();
+                $imageInfo = @getimagesize($tempPath);
+                return $imageInfo !== false;
+            }
+            return false;
+        });
+
+        $this->factory->extend('ci_mimes', function ($attribute, $value, $parameters, $validator) {
+            if (is_array($value) && isset($value['_ci_file'])) {
+                $file = $value['_ci_file'];
+                $extension = strtolower(pathinfo($file->getName(), PATHINFO_EXTENSION));
+                return in_array($extension, $parameters) || in_array($file->getClientMimeType(), $parameters);
+            }
+            return false;
+        });
+
+        $this->factory->extend('ci_file_size', function ($attribute, $value, $parameters, $validator) {
+            if (is_array($value) && isset($value['_ci_file']) && isset($parameters[0])) {
+                $file = $value['_ci_file'];
+                $maxSize = (int) $parameters[0]; // Size in kilobytes
+                $fileSize = $file->getSize() / 1024; // Convert bytes to kilobytes
+                return $fileSize <= $maxSize;
+            }
+            return false;
+        });
+
+        $this->factory->replacer('ci_file_size', function ($message, $attribute, $rule, $parameters) {
+            return str_replace(':value', $parameters[0], $message);
+        });
+
+        $this->factory->extend('ci_file', function ($attribute, $value, $parameters, $validator) {
+            if (is_array($value) && isset($value['_ci_file'])) {
+                $file = $value['_ci_file'];
+                return $file->isValid() && !$file->hasMoved();
+            }
+            return false;
+        });
+
+        $this->factory->extend('ci_video', function ($attribute, $value, $parameters, $validator) {
+            if (is_array($value) && isset($value['_ci_file'])) {
+                $file = $value['_ci_file'];
+                $tempPath = $file->getTempName();
+
+                $mimeType = $file->getClientMimeType();
+
+                $videoMimeTypes = [
+                    'video/mp4',
+                    'video/mpeg',
+                    'video/quicktime',
+                    'video/x-msvideo',
+                    'video/x-ms-wmv',
+                    'video/x-flv',
+                    'video/webm',
+                    'video/3gpp',
+                    'video/x-matroska',
+                    'video/avi',
+                    'video/mov'
+                ];
+
+                return in_array($mimeType, $videoMimeTypes);
+            }
+            return false;
+        });
+    }
+
+    /**
+     * Setup database connection for validators that need it
+     */
+    private function setupDatabaseConnection()
+    {
+        $capsule = new Capsule;
+
+        $capsule->addConnection([
+            'host'      => env('database.default.hostname', 'localhost'),
+            'driver'    => env('database.default.DBDriver', 'mysql'),
+            'database'  => env('database.default.database', 'ci4'),
+            'username'  => env('database.default.username', 'root'),
+            'password'  => env('database.default.password', ''),
+            'charset'   => env('database.default.DBCharset', 'utf8'),
+            'collation' => env('database.default.DBCollat', 'utf8_general_ci'),
+            'prefix'    => env('database.default.DBPrefix', ''),
+        ]);
+
+        $verifier = new DatabasePresenceVerifier($capsule->getDatabaseManager());
+        $this->factory->setPresenceVerifier($verifier);
+    }
+
+    /**
+     * Get all validation messages
+     * 
+     * @return array
+     */
+    private function getValidationMessages(): array
+    {
+        return [
             'accepted' => 'The :attribute must be accepted.',
             'accepted_if' => 'The :attribute must be accepted when :other is :value.',
             'active_url' => 'The :attribute is not a valid URL.',
@@ -132,67 +287,16 @@ class LaravelValidator
             'uploaded' => 'The :attribute failed to upload.',
             'url' => 'The :attribute must be a valid URL.',
             'uuid' => 'The :attribute must be a valid UUID.',
-            
+            'ci_image' => 'The :attribute must be a valid image.',
+            'ci_mimes' => 'The :attribute must be a file of type: :values.',
+            'ci_file_size' => 'The :attribute must be less than :value kilobytes.',
+            'ci_video' => 'The :attribute must be a valid video file.',
+
             // Custom validation attributes
             'attributes' => [],
-            
+
             // Custom validation values
             'values' => [],
-        ]);
-        
-        $translator = new Translator($loader, 'en');
-        $this->factory = new Factory($translator);
-
-        $capsule = new Capsule;
-
-        $capsule->addConnection([
-            'host'      => env('database.default.hostname', 'localhost'),
-            'driver'    => env('database.default.DBDriver', 'mysql'),
-            'database'  => env('database.default.database', 'ci4'),
-            'username'  => env('database.default.username', 'root'),
-            'password'  => env('database.default.password', ''),
-            'charset'   => env('database.default.DBCharset', 'utf8'),
-            'collation' => env('database.default.DBCollat', 'utf8_general_ci'),
-            'prefix'    => env('database.default.DBPrefix', ''),
-        ]);
-
-        $verifier = new DatabasePresenceVerifier($capsule->getDatabaseManager());
-        $this->factory->setPresenceVerifier($verifier);
-    }
-    
-    /**
-     * Validate data against rules
-     *
-     * @param array $data Data to validate
-     * @param array $rules Validation rules
-     * @param array $messages Custom error messages (optional)
-     * @param array $attributes Custom attribute names (optional)
-     * @return array Result with success flag and errors if any
-     */
-    public function validate(array $data, array $rules, array $messages = [], array $attributes = [])
-    {
-        // Create validator instance
-        $validator = $this->factory->make($data, $rules, $messages, $attributes);
-        
-        // Check if validation fails
-        if ($validator->fails()) {
-            // Convert each field's errors to a string (get first error message only)
-            $errorsByField = [];
-            foreach ($validator->errors()->toArray() as $field => $messages) {
-                $errorsByField[$field] = $messages[0]; // Get only the first error message
-            }
-            
-            return [
-                'success' => false,
-                'errors' => $validator->errors()->all(),
-                'errorsByField' => $errorsByField
-            ];
-        }
-        
-        // Return validated data if successful
-        return [
-            'success' => true,
-            'validated' => $validator->validated()
         ];
     }
 }
