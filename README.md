@@ -77,7 +77,6 @@ $data = [
 ];
 return blade_view('users.index', $data); // Renders app/Views/users/index.blade.php
 ```
-````
 
 **Returning Output as String:**
 
