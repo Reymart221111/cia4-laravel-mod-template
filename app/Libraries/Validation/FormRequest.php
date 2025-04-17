@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Libraries;
+namespace App\Libraries\Validation;
 
 use App\Exceptions\ValidationException;
 
@@ -22,7 +22,7 @@ abstract class FormRequest
     /**
      * The validator instance
      * 
-     * @var \App\Libraries\LaravelValidator
+     * @var \App\Libraries\Validation\LaravelValidator
      */
     protected $validator;
 

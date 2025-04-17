@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Libraries;
+namespace App\Libraries\Blade;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Jenssegers\Blade\Blade;
-use App\Libraries\ComponentDirectiveProvider;
+use App\Libraries\Providers\ComponentDirectiveProvider;
 
 /**
  * Provides CodeIgniter-specific integrations for the Blade templating engine.

@@ -1,7 +1,6 @@
 <?php
-// app/Libraries/PaginationRenderer.php
 
-namespace App\Libraries;
+namespace App\Libraries\Blade;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 

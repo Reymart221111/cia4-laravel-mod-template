@@ -3,8 +3,9 @@
 namespace Config;
 
 use App\Config\Eloquent;
-use App\Libraries\Gate;
-use App\Libraries\LaravelValidator;
+use App\Libraries\Authentication\Gate;
+use App\Libraries\Providers\AuthServiceProvider;
+use App\Libraries\Validation\LaravelValidator;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -35,7 +36,7 @@ class Services extends BaseService
         if ($getShared) {
             return static::getSharedInstance('laravelValidator');
         }
-        
+
         return new LaravelValidator();
     }
 
@@ -45,7 +46,7 @@ class Services extends BaseService
             return static::getSharedInstance('authorization');
         }
 
-        $provider = new \App\Libraries\AuthServiceProvider();
+        $provider = new AuthServiceProvider;
         $provider->register();
 
         return gate();

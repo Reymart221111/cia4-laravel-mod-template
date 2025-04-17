@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Libraries;
+namespace App\Libraries\Validation;
 
 use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\Translator;

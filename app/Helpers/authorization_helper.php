@@ -1,11 +1,11 @@
 <?php
 
-use App\Libraries\Gate;
+use App\Libraries\Authentication\Gate;
 
 /**
  * Retrieves an instance of the Gate class.
  *
- * @return \App\Libraries\Gate The Gate instance.
+ * @return \App\Libraries\Authentication\Gate The Gate instance.
  */
 if (!function_exists('gate')) {
     function gate() {

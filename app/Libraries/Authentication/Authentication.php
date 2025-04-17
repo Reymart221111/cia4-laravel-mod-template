@@ -1,5 +1,6 @@
 <?php
-namespace App\Libraries;
+
+namespace App\Libraries\Authentication;
 
 use App\Models\User;
 
@@ -16,14 +17,14 @@ class Authentication
      * @var \CodeIgniter\Session\Session
      */
     protected $session;
-    
+
     /**
      * Currently authenticated user
      * 
      * @var User|null
      */
     protected $user = null;
-    
+
     /**
      * Constructor
      * 
@@ -33,7 +34,7 @@ class Authentication
     {
         $this->session = \Config\Services::session();
     }
-    
+
     /**
      * Get the currently authenticated user
      * 
@@ -46,16 +47,16 @@ class Authentication
         if ($this->user !== null) {
             return $this->user;
         }
-        
+
         $userId = $this->session->get('auth_user_id');
         if (!$userId) {
             return null;
         }
-        
+
         $this->user = User::find($userId);
         return $this->user;
     }
-    
+
     /**
      * Check if a user is currently authenticated
      * 
@@ -65,7 +66,7 @@ class Authentication
     {
         return $this->user() !== null;
     }
-    
+
     /**
      * Attempt to authenticate a user with the provided credentials
      * 
@@ -75,15 +76,15 @@ class Authentication
     public function attempt(array $credentials): bool
     {
         $user = User::where('email', $credentials['email'])->first();
-        
+
         if ($user && password_verify($credentials['password'], $user->password)) {
             $this->login($user);
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Log in a user
      * 
@@ -96,13 +97,13 @@ class Authentication
     {
         $this->session->set('auth_user_id', $user->id);
         $this->user = $user;
-        
+
         // Regenerate session ID for security
         $this->session->regenerate(true);
-        
+
         return true;
     }
-    
+
     /**
      * Log out the current user
      * 
@@ -115,7 +116,7 @@ class Authentication
         $this->user = null;
         $this->session->remove('auth_user_id');
         $this->session->regenerate(true);
-        
+
         return true;
     }
 }

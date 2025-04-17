@@ -1,7 +1,7 @@
 <?php
 
 use Jenssegers\Blade\Blade;
-use App\Libraries\BladeExtension;
+use App\Libraries\Blade\BladeExtension;
 use Illuminate\Pagination\Paginator;
 
 /**

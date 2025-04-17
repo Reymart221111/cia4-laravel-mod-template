@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Libraries; 
+namespace App\Libraries\Providers; 
 
 use Jenssegers\Blade\Blade;
 
