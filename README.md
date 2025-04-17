@@ -56,9 +56,6 @@ Full Blade template integration:
 - Component support
 - Directives and control structures
 
-````markdown
-### Blade Templating Engine
-
 Full Blade template integration via the `jenssegers/blade` package, providing a powerful and expressive way to build views:
 
 - Layout inheritance (`@extends`, `@section`)
