@@ -100,7 +100,7 @@ class MakeLaravelRequest extends BaseCommand
 
 namespace {$namespace};
 
-use App\Libraries\FormRequest;
+use App\Libraries\Validation\FormRequest;
 
 class {$className} extends FormRequest
 {
