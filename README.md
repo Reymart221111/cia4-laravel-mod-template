@@ -56,6 +56,161 @@ Full Blade template integration:
 - Component support
 - Directives and control structures
 
+````markdown
+### Blade Templating Engine
+
+Full Blade template integration via the `jenssegers/blade` package, providing a powerful and expressive way to build views:
+
+- Layout inheritance (`@extends`, `@section`)
+- Component support (`@component`, `<x-component-name>`)
+- Directives (`@if`, `@foreach`, `@error`, custom directives)
+- Control structures and clean PHP embedding
+
+#### Using Blade Views
+
+Views are rendered using the custom `blade_view()` helper function provided in `app/Helpers/blade_helper.php` (ensure this helper is loaded, e.g., via `composer.json` autoload or `app/Config/Autoload.php`).
+
+**Basic Usage (Echoing Output):**
+
+```php
+// In your Controller method
+$data = [
+    'title' => 'User List',
+    'users' => User::all()
+];
+return blade_view('users.index', $data); // Renders app/Views/users/index.blade.php
+```
+````
+
+**Returning Output as String:**
+
+Pass `true` as the third argument to get the rendered HTML as a string instead of echoing it.
+
+```php
+// In your Controller method
+$data = ['message' => 'Success!'];
+$html = blade_view('partials.alert', $data, true);
+// Now $html contains the rendered content
+```
+
+#### Using Components
+
+This template includes a custom component system similar to Laravel's, allowing you to create reusable UI elements. Components are managed via the `App\Libraries\BladeExtension` and `App\Libraries\Blade\ComponentDirectiveProvider` classes, which register the necessary directives.
+
+**Component Location & Namespace:**
+
+- By default, components are expected to reside in a specific directory (e.g., `app/Views/contents/components/`).
+- This path is configured within the `blade_view()` helper function using `$blade->addNamespace('components', 'path/to/your/components');`.
+- Components are typically referenced using an `x-` prefix (e.g., `x-alert`) which maps to the registered `components` namespace (e.g., `components::alert`).
+
+**Basic Usage (Components with Content/Slots):**
+
+Use the `@component` and `@endcomponent` directives. Data is passed as the second argument (an array). Content between the directives becomes the `$slot` variable within the component view.
+
+```blade
+{{-- In your main view, e.g., users/index.blade.php --}}
+@component('components::alert', ['type' => 'info', 'title' => 'Information'])
+    This is the main content of the alert. It will be available
+    in the component's view via the $slot variable.
+@endcomponent
+
+{{-- Alternatively, using the x-prefix convention --}}
+@component('x-alert', ['type' => 'warning'])
+    This alert uses the x-prefix.
+@endcomponent
+```
+
+**Self-Closing Components (No Content/Slots):**
+
+For components that don't need inner content (like buttons, icons, inputs), you can use a self-closing syntax by adding `, true` as the **third** argument to the `@component` directive. **Do not** use `@endcomponent` in this case.
+
+```blade
+{{-- In your main view --}}
+@php
+    $userId = 123;
+    $deleteRoute = 'users.delete'; // Example route name
+@endphp
+
+{{-- Notice the ', true' at the end and NO @endcomponent --}}
+@component('x-delete-button', ['route' => $deleteRoute, 'id' => $userId], true)
+
+{{-- This renders the component immediately without expecting a default $slot --}}
+```
+
+**Component File Structure (Example):**
+
+A component is just a Blade view file that receives data (attributes) and potentially `$slot` variables.
+
+```blade
+{{-- Example: app/Views/contents/components/alert.blade.php --}}
+@props([
+    'type' => 'info', // Default type
+    'title' => null    // Optional title attribute
+])
+
+<div class="alert alert-{{ $type ?? 'info' }}" role="alert">
+    @if ($title)
+        <h4 class="alert-heading">{{ $title }}</h4>
+    @endif
+
+    {{-- The $slot variable contains content passed between @component and @endcomponent --}}
+    {{ $slot }}
+
+    {{-- Example of using a named slot (see below) --}}
+    @if (isset($footer))
+        <hr>
+        <p class="mb-0">{{ $footer }}</p>
+    @endif
+</div>
+```
+
+_(Note: The `@props` directive shown above is standard in Laravel but might require custom implementation or adaptation in this specific template if not already included. The core concept is receiving variables like `$type`, `$title`, `$slot`)_
+
+**Using Named Slots:**
+
+Pass additional content sections using the `@slot` and `@endslot` directives within a component block.
+
+```blade
+{{-- In your main view --}}
+@component('x-card', ['title' => 'My Card'])
+    {{-- This is the default $slot content --}}
+    <p>This is the main card body.</p>
+
+    {{-- This content goes into the $footer variable in the component --}}
+    @slot('footer')
+        <button class="btn btn-primary">Save Changes</button>
+    @endslot
+
+    {{-- You can have multiple named slots --}}
+    @slot('header')
+        <span class="badge bg-secondary">Optional Header Info</span>
+    @endslot
+@endcomponent
+```
+
+```blade
+{{-- Example: app/Views/contents/components/card.blade.php --}}
+<div class="card">
+    <div class="card-header">
+        {{ $title ?? 'Default Card Title' }}
+        {{-- Render the named 'header' slot if provided --}}
+        @if (isset($header))
+            <div class="float-end">{{ $header }}</div>
+        @endif
+    </div>
+    <div class="card-body">
+        {{-- Render the default slot content --}}
+        {{ $slot }}
+    </div>
+    {{-- Render the named 'footer' slot if provided --}}
+    @if (isset($footer))
+        <div class="card-footer">
+            {{ $footer }}
+        </div>
+    @endif
+</div>
+```
+
 ## Features Overview
 
 ### Authorization System
