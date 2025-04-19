@@ -7,28 +7,65 @@ use CodeIgniter\CLI\CLI;
 use Config\Autoload;
 use Exception;
 
+/**
+ * Laravel Rule Generator Command
+ * 
+ * Creates new Laravel-style validation rule classes in the application with
+ * support for subdirectories.
+ */
 class MakeLaravelRule extends BaseCommand
 {
-    /** @var string */
+    /**
+     * The command's group.
+     *
+     * @var string
+     */
     protected $group = 'Generators';
-    /** @var string */
+
+    /**
+     * The command's name.
+     *
+     * @var string
+     */
     protected $name = 'make:laravel-rule';
-    /** @var string */
+
+    /**
+     * The command's description.
+     *
+     * @var string
+     */
     protected $description = 'Generates a new Laravel-style validation rule class.';
-    /** @var string */
+
+    /**
+     * The command's usage.
+     *
+     * @var string
+     */
     protected $usage = 'make:laravel-rule <name> [options]';
-    /** @var array */
+
+    /**
+     * The command's arguments.
+     *
+     * @var array<string, string>
+     */
     protected $arguments = [
         'name' => 'The name of the rule class (e.g., NoObsceneWord or Common/NoObsceneWord).',
     ];
-    /** @var array */
+
+    /**
+     * The command's options.
+     *
+     * @var array<string, string>
+     */
     protected $options = [
         '--force' => 'Force overwrite existing file.',
     ];
 
-    /** Standard exit codes */
+    /**
+     * Standard exit codes.
+     */
     private const EXIT_SUCCESS = 0;
-    private const EXIT_ERROR   = 1;
+    private const EXIT_ERROR = 1;
 
     /**
      * Executes the command.
@@ -40,32 +77,37 @@ class MakeLaravelRule extends BaseCommand
     {
         helper('filesystem'); // Ensure filesystem helper is loaded
 
-        // 1. Get and validate the rule name
+        // Get and validate the rule name
         $name = $this->getRuleName($params);
         if ($name === null) {
             return self::EXIT_ERROR; // Error message already shown in getRuleName
         }
 
-        // 2. Determine class details and paths
+        // Determine class details and paths
         $details = $this->resolveTargetDetails($name);
-        ['className' => $className, 'fullNamespace' => $fullNamespace, 'targetDir' => $targetDir, 'targetFile' => $targetFile] = $details;
+        [
+            'className' => $className,
+            'fullNamespace' => $fullNamespace,
+            'targetDir' => $targetDir,
+            'targetFile' => $targetFile
+        ] = $details;
 
-        // 3. Ensure the target directory exists
+        // Ensure the target directory exists
         if (!$this->ensureDirectoryExists($targetDir)) {
             return self::EXIT_ERROR;
         }
 
-        // 4. Check for existing file and --force option
+        // Check for existing file and --force option
         $force = $params['force'] ?? CLI::getOption('force') ?? false;
         if (!$force && file_exists($targetFile)) {
             $this->showFileExistsError($targetFile);
             return self::EXIT_ERROR;
         }
 
-        // 5. Generate the file content
+        // Generate the file content
         $content = $this->generateContent($fullNamespace, $className);
 
-        // 6. Write the file
+        // Write the file
         if ($this->writeFileContent($targetFile, $content)) {
             CLI::write("Rule created successfully: " . CLI::color(str_replace(APPPATH, 'app/', $targetFile), 'green'));
             return self::EXIT_SUCCESS;
@@ -78,8 +120,8 @@ class MakeLaravelRule extends BaseCommand
     /**
      * Prompts for or retrieves the rule name from parameters.
      *
-     * @param array $params
-     * @return string|null Rule name or null on error.
+     * @param array $params Command parameters
+     * @return string|null Rule name or null on error
      */
     private function getRuleName(array $params): ?string
     {
@@ -95,8 +137,8 @@ class MakeLaravelRule extends BaseCommand
     /**
      * Resolves class name, namespace, and file paths from the input name.
      *
-     * @param string $name Input rule name (can include subdirectories).
-     * @return array Associative array with className, fullNamespace, targetDir, targetFile.
+     * @param string $name Input rule name (can include subdirectories)
+     * @return array Associative array with className, fullNamespace, targetDir, targetFile
      */
     private function resolveTargetDetails(string $name): array
     {
@@ -104,6 +146,7 @@ class MakeLaravelRule extends BaseCommand
         $normalizedName = trim(str_replace('\\', '/', $name), '/ ');
 
         $className = basename($normalizedName);
+
         // Get the directory part; will be '.' if no directory specified
         $subNamespacePart = trim(dirname($normalizedName), './ ');
 
@@ -128,8 +171,8 @@ class MakeLaravelRule extends BaseCommand
     /**
      * Ensures the specified directory exists, creating it if necessary.
      *
-     * @param string $directory Absolute path to the directory.
-     * @return bool True on success or if directory already exists, false on failure.
+     * @param string $directory Absolute path to the directory
+     * @return bool True on success or if directory already exists, false on failure
      */
     private function ensureDirectoryExists(string $directory): bool
     {
@@ -138,12 +181,12 @@ class MakeLaravelRule extends BaseCommand
         }
 
         try {
-            // Create recursively with appropriate permissions (0755 is common, 0777 relies on umask)
+            // Create recursively with appropriate permissions
             if (!mkdir($directory, 0755, true)) {
                 CLI::error("Error: Could not create directory: {$directory}");
                 return false;
             }
-            CLI::write("Directory created: " . str_replace(APPPATH, 'app/', $directory), 'dark_gray'); // More subtle color
+            CLI::write("Directory created: " . str_replace(APPPATH, 'app/', $directory), 'dark_gray');
             return true;
         } catch (Exception $e) {
             CLI::error("Error creating directory: {$directory}. Reason: " . $e->getMessage());
@@ -154,7 +197,8 @@ class MakeLaravelRule extends BaseCommand
     /**
      * Displays the error message when a file already exists.
      *
-     * @param string $targetFile Absolute path to the file.
+     * @param string $targetFile Absolute path to the file
+     * @return void
      */
     private function showFileExistsError(string $targetFile): void
     {
@@ -165,9 +209,9 @@ class MakeLaravelRule extends BaseCommand
     /**
      * Generates the PHP content for the rule class file.
      *
-     * @param string $namespace The full namespace for the class.
-     * @param string $className The class name.
-     * @return string The generated PHP code.
+     * @param string $namespace The full namespace for the class
+     * @param string $className The class name
+     * @return string The generated PHP code
      */
     private function generateContent(string $namespace, string $className): string
     {
@@ -182,20 +226,19 @@ class MakeLaravelRule extends BaseCommand
     /**
      * Writes the generated content to the target file.
      *
-     * @param string $targetFile Absolute path to the file.
-     * @param string $content The content to write.
-     * @return bool True on success, false on failure.
+     * @param string $targetFile Absolute path to the file
+     * @param string $content The content to write
+     * @return bool True on success, false on failure
      */
     private function writeFileContent(string $targetFile, string $content): bool
     {
-        // write_file should return false on failure
         return write_file($targetFile, $content);
     }
 
     /**
      * Gets the template content for the rule class.
      *
-     * @return string
+     * @return string The template content
      */
     private function getTemplate(): string
     {
@@ -212,9 +255,10 @@ class {className} implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  string  \$attribute The attribute name being validated.
-     * @param  mixed   \$value     The value of the attribute.
-     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  \$fail The failure callback.
+     * @param  string  \$attribute The attribute name being validated
+     * @param  mixed   \$value     The value of the attribute
+     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  \$fail The failure callback
+     * @return void
      */
     public function validate(string \$attribute, mixed \$value, Closure \$fail): void
     {
