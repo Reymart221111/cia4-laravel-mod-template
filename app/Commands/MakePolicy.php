@@ -6,19 +6,66 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 use Config\Autoload;
 
+/**
+ * Policy Generator Command
+ * 
+ * Creates new policy class files in the application with optional
+ * subdirectory support and model-specific templates.
+ */
 class MakePolicy extends BaseCommand
 {
+    /**
+     * The command's group.
+     *
+     * @var string
+     */
     protected $group = 'Generators';
+
+    /**
+     * The command's name.
+     *
+     * @var string
+     */
     protected $name = 'make:policy';
+
+    /**
+     * The command's description.
+     *
+     * @var string
+     */
     protected $description = 'Create a new policy class';
+
+    /**
+     * The command's usage.
+     *
+     * @var string
+     */
     protected $usage = 'make:policy [PolicyName] [options]';
+
+    /**
+     * The command's arguments.
+     *
+     * @var array<string, string>
+     */
     protected $arguments = [
-        'PolicyName' => 'The name of the policy class',
+        'PolicyName' => 'The name of the policy class (use slashes for subdirectories)',
     ];
+
+    /**
+     * The command's options.
+     *
+     * @var array<string, string>
+     */
     protected $options = [
         '--model' => 'Generate a policy for the specified model',
     ];
 
+    /**
+     * Run the policy generation command.
+     *
+     * @param array $params Command parameters
+     * @return void
+     */
     public function run(array $params)
     {
         $policyName = array_shift($params);
@@ -27,15 +74,15 @@ class MakePolicy extends BaseCommand
             $policyName = CLI::prompt('Policy name');
         }
 
-        $policyName = $this->sanitizeClassName($policyName);
-
-        // Extract model name from arguments
         $model = $this->extractModelOptionFromArguments();
-
-        // Create the policy
         $this->createPolicy($policyName, $model);
     }
 
+    /**
+     * Extract the model name from command arguments.
+     *
+     * @return string|null
+     */
     protected function extractModelOptionFromArguments(): ?string
     {
         global $argv;
@@ -51,68 +98,103 @@ class MakePolicy extends BaseCommand
         return $modelName;
     }
 
+    /**
+     * Create a policy file with optional model-specific template.
+     *
+     * @param string $policyName The name of the policy (with optional subdirectories)
+     * @param string|null $model The associated model name if any
+     * @return void
+     */
     protected function createPolicy(string $policyName, ?string $model = null)
     {
         helper('filesystem');
 
-        // Make sure we have the correct suffix
-        if (!str_ends_with($policyName, 'Policy')) {
-            $policyName .= 'Policy';
+        // Process subdirectories in the policy name
+        $segments = explode('/', $policyName);
+        $className = end($segments);
+        $className = $this->sanitizeClassName($className);
+
+        // Ensure class name has proper suffix
+        if (!str_ends_with($className, 'Policy')) {
+            $className .= 'Policy';
         }
 
-        // Create the directory if it doesn't exist
-        $directory = APPPATH . 'Policies';
-        if (!is_dir($directory)) {
-            mkdir($directory, 0777, true);
+        // Update the path segments with sanitized class name
+        $segments[count($segments) - 1] = $className;
+        $relativePath = implode('/', $segments);
+
+        // Setup directory structure
+        $baseDirectory = APPPATH . 'Policies';
+        $subDirectory = dirname($baseDirectory . '/' . $relativePath);
+
+        // Create directories if needed
+        if (!is_dir($subDirectory)) {
+            mkdir($subDirectory, 0777, true);
         }
 
-        // Check if policy file already exists
-        $path = $directory . '/' . $policyName . '.php';
+        $path = $baseDirectory . '/' . $relativePath . '.php';
+
+        // Prevent overwriting existing files
         if (file_exists($path)) {
-            CLI::error($policyName . ' already exists!');
+            CLI::error($relativePath . ' already exists!');
             return;
         }
 
-        // Get the policy template
-        if ($model) {
-            $template = $this->getModelPolicyTemplate($policyName, $model);
-        } else {
-            $template = $this->getBasicPolicyTemplate($policyName);
+        // Build the appropriate namespace with subdirectories
+        $namespaceSegments = ['App\\Policies'];
+        $subdirs = explode('/', dirname($relativePath));
+
+        if ($subdirs[0] !== '.') {
+            foreach ($subdirs as $dir) {
+                if (!empty($dir)) {
+                    $namespaceSegments[] = $this->sanitizeClassName($dir);
+                }
+            }
         }
 
-        // Write the policy file
+        $namespace = implode('\\', $namespaceSegments);
+
+        // Generate the template based on type
+        $template = $model
+            ? $this->getModelPolicyTemplate($className, $model, $namespace)
+            : $this->getBasicPolicyTemplate($className, $namespace);
+
+        // Write the file
         if (write_file($path, $template)) {
-            CLI::write('Policy created: ' . CLI::color($policyName, 'green'));
+            CLI::write('Policy created: ' . CLI::color($relativePath, 'green'));
         } else {
             CLI::error('Error creating policy file!');
         }
     }
 
-    protected function getModelPolicyTemplate(string $policyName, string $model)
+    /**
+     * Generate a policy template for model-specific policies.
+     *
+     * @param string $policyName The name of the policy class
+     * @param string $model The associated model name
+     * @param string $namespace The namespace to use for the policy
+     * @return string
+     */
+    protected function getModelPolicyTemplate(string $policyName, string $model, string $namespace)
     {
-        // Strip "Model" suffix if present
+        // Normalize model name
         $modelName = str_replace('Model', '', $model);
 
-        // Make sure we have correct model name with namespace
         if (!str_contains($modelName, '\\')) {
             $modelName = 'App\\Models\\' . $modelName;
         }
-        
-        // Get the short class name for use in method parameters
+
         $modelClass = $this->getModelClass($modelName);
-        
-        // Check if this is the User model to avoid duplicate imports
         $isUserModel = ($modelClass === 'User');
-        
-        // Only include the User model import if it's not the same as our target model
-        $imports = $isUserModel 
-            ? "use {$modelName};" 
+
+        $imports = $isUserModel
+            ? "use {$modelName};"
             : "use App\\Models\\User;\nuse {$modelName};";
 
         return <<<EOD
 <?php
 
-namespace App\Policies;
+namespace {$namespace};
 
 {$imports}
 
@@ -177,14 +259,21 @@ class {$policyName}
 EOD;
     }
 
-    protected function getBasicPolicyTemplate(string $policyName)
+    /**
+     * Generate a basic policy template.
+     *
+     * @param string $policyName The name of the policy class
+     * @param string $namespace The namespace to use for the policy
+     * @return string
+     */
+    protected function getBasicPolicyTemplate(string $policyName, string $namespace)
     {
         return <<<EOD
 <?php
 
-namespace App\Policies;
+namespace {$namespace};
 
-use App\Models\User;
+use App\\Models\\User;
 
 class {$policyName}
 {
@@ -199,26 +288,39 @@ class {$policyName}
 EOD;
     }
 
+    /**
+     * Extract the class name from a fully qualified model name.
+     *
+     * @param string $modelName The fully qualified model name
+     * @return string
+     */
     protected function getModelClass(string $modelName)
     {
         $parts = explode('\\', $modelName);
         return end($parts);
     }
 
+    /**
+     * Sanitize and normalize a class name.
+     *
+     * @param string $name The raw class name
+     * @return string
+     */
     protected function sanitizeClassName(string $name): string
     {
-        // Remove file extension if present
         $name = str_replace('.php', '', $name);
-
-        // Convert dashes and underscores to spaces
         $name = str_replace(['-', '_'], ' ', $name);
-
-        // Title case and remove spaces
         $name = str_replace(' ', '', ucwords($name));
 
         return $name;
     }
 
+    /**
+     * Get an option value from CLI input.
+     *
+     * @param string $option The option name
+     * @return string|null
+     */
     protected function getOption(string $option): ?string
     {
         $options = CLI::getOptions();
