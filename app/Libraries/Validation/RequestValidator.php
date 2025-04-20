@@ -19,7 +19,7 @@ class RequestValidator
     public static function validate(array $rules, array $messages = [], array $attributes = []): ValidatedData
     {
         $request = \Config\Services::request();
-        $validator = new LaravelValidator();
+        $validator = service('laravelValidator');
         
         // Combine POST data and FILES
         $data = array_merge($request->getPost(), self::collectFiles($request));

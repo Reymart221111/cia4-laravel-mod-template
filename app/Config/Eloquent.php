@@ -46,37 +46,37 @@ class Eloquent
             'prefix'    => env('database.default.DBPrefix', ''),
         ]);
 
-        $this->setPageResolver();
-        $this->setPathResolver();
-        $this->setPaginationStyling();
-
-
         $this->capsule->setAsGlobal();
         $this->capsule->bootEloquent();
     }
 
     /**
-     * Set the correct page resolver
+     * Configure pagination once for the entire application
      */
-    protected function setPageResolver(): void
+    protected function configurePagination(): void
     {
-        Paginator::currentPageResolver(fn() => isset($_GET['page']) ? (int) $_GET['page'] : 1);
-    }
+        // Register a singleton instance of some pagination components
+        $this->container->singleton('paginator.currentPage', function () {
+            return isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        });
 
-    /**
-     * Set the path resolver to use current URL
-     */
-    protected function setPathResolver(): void
-    {
-        Paginator::currentPathResolver(fn() => current_url());
-    }
+        $this->container->singleton('paginator.currentPath', function () {
+            return current_url();
+        });
 
-    /**
-     * Use Bootstrap styling for pagination
-     */
-    protected function setPaginationStyling(): void
-    {
-        Paginator::useBootstrap();
+        $paginator = Paginator::class;
+
+        // Set the global resolvers to use our container
+        $paginator::currentPageResolver(function () {
+            return $this->container->make('paginator.currentPage');
+        });
+
+        $paginator::currentPathResolver(function () {
+            return $this->container->make('paginator.currentPath');
+        });
+
+        // Use Bootstrap styling for pagination
+        $paginator::useBootstrap();
     }
 
     /**
@@ -95,6 +95,7 @@ class Eloquent
     {
         $this->registerConfigService();
         $this->registerHashService();
+        $this->configurePagination();
     }
 
     /**

@@ -42,6 +42,7 @@ class BladeService
         $this->ensureCacheDirectory();
 
         $container = new BladeContainer();
+        
         $this->blade = new Blade(
             $this->config['viewsPath'],
             $this->config['cachePath'],
@@ -49,6 +50,10 @@ class BladeService
         );
 
         if (ENVIRONMENT === 'production') {
+            $this->blade->getCompiler()->setIsExpired(function() {
+                return false; 
+            });
+            
             $this->blade->getCompiler()->setContentTags('{{', '}}');
             $this->blade->getCompiler()->setEscapedContentTags('{{{', '}}}');
         }

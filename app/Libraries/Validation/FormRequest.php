@@ -56,7 +56,7 @@ abstract class FormRequest
     public function __construct()
     {
         $this->request = \Config\Services::request();
-        $this->validator = new LaravelValidator();
+        $this->validator = service('laravelValidator');
         $this->data = $this->request->getPost();
 
         // Combine POST data and FILES
@@ -328,6 +328,99 @@ abstract class FormRequest
             return false;
         }
         return isset($this->validatedData[$key]);
+    }
+
+    /**
+     * Check if the request contains a non-empty value for the given field
+     *
+     * @param string $key The field name to check
+     * @return bool True if the field exists and has a non-empty value
+     */
+    public function has(string $key): bool
+    {
+        if (!$this->fails() && !is_null($this->validatedData)) {
+            return isset($this->validatedData[$key]) &&
+                $this->validatedData[$key] !== '' &&
+                $this->validatedData[$key] !== null;
+        }
+
+        return isset($this->data[$key]) &&
+            $this->data[$key] !== '' &&
+            $this->data[$key] !== null;
+    }
+
+    /**
+     * Check if the request contains a file for the given field
+     *
+     * @param string $key The file field name to check
+     * @return bool True if a valid file exists for the field
+     */
+    public function hasFile(string $key): bool
+    {
+        if (!isset($this->data[$key])) {
+            return false;
+        }
+
+        $file = $this->data[$key];
+
+        if (is_array($file) && isset($file['_ci_file'])) {
+            return true;
+        }
+
+        if (is_array($file)) {
+            foreach ($file as $singleFile) {
+                if (is_array($singleFile) && isset($singleFile['_ci_file'])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the file instance for the given field
+     *
+     * @param string $key The file field name
+     * @return mixed|null The file instance or null if not found
+     */
+    public function file(string $key)
+    {
+        if (!$this->hasFile($key)) {
+            return null;
+        }
+
+        $file = $this->data[$key];
+
+        if (is_array($file) && isset($file['_ci_file'])) {
+            return $file['_ci_file'];
+        }
+
+        if (is_array($file)) {
+            $files = [];
+            foreach ($file as $index => $singleFile) {
+                if (is_array($singleFile) && isset($singleFile['_ci_file'])) {
+                    $files[$index] = $singleFile['_ci_file'];
+                }
+            }
+            return !empty($files) ? $files : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get validation errors as a chainable collection
+     *
+     * @return ErrorsCollection Collection object with error messages
+     */
+    public function getErrors(): ErrorsCollection
+    {
+        if (!isset($this->validationResult)) {
+            $this->validate();
+        }
+
+        return new ErrorsCollection($this->validationResult['errorsByField'] ?? []);
     }
 
     /**

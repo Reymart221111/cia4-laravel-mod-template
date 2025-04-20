@@ -17,7 +17,7 @@ class UserController extends BaseController
     use SearchPaginationTrait;
     public function index()
     {
-        $users = User::paginate(10);
+        $users = User::select(['id', 'name', 'email'])->paginate(10);
         return blade_view('demo', ['users' => $users]);
     }
 
@@ -28,13 +28,19 @@ class UserController extends BaseController
 
     public function store()
     {
+        $validatedData = RequestValidator::validate([
+            'name' => 'required|min:3|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6|max:255',
+        ]);
+        
         User::create(StoreUserRequest::validateRequest());
         return redirect()->route('users.index')->with('success', 'User created successfully');
     }
 
     public function edit($id)
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
         $this->redirectBack404IfNotFound($user, 'User');
         return blade_view('demo-edit', compact('user'));
     }

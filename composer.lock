@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "53c250e6b50327d261cf583fe9e29314",
+    "content-hash": "a3bcd65aaff451fe54a8b7912245ec63",
     "packages": [
         {
             "name": "brick/math",
@@ -1974,16 +1974,16 @@
         },
         {
             "name": "jenssegers/blade",
-            "version": "v2.0.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/jenssegers/blade.git",
-                "reference": "7a31d61a6b1fe9cae5c61349dba435498dd8097c"
+                "url": "https://github.com/Reymart221111/blade.git",
+                "reference": "033cf6968f5315ad23d125aafb653432f971be6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jenssegers/blade/zipball/7a31d61a6b1fe9cae5c61349dba435498dd8097c",
-                "reference": "7a31d61a6b1fe9cae5c61349dba435498dd8097c",
+                "url": "https://api.github.com/repos/Reymart221111/blade/zipball/033cf6968f5315ad23d125aafb653432f971be6d",
+                "reference": "033cf6968f5315ad23d125aafb653432f971be6d",
                 "shasum": ""
             },
             "require": {
@@ -1995,13 +1995,24 @@
                 "laravel/pint": "^1.13",
                 "phpunit/phpunit": "^10.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Jenssegers\\Blade\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "vendor/bin/pint --test"
+                ],
+                "fix": [
+                    "vendor/bin/pint"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -2020,20 +2031,19 @@
                 "view"
             ],
             "support": {
-                "issues": "https://github.com/jenssegers/blade/issues",
-                "source": "https://github.com/jenssegers/blade/tree/v2.0.1"
+                "source": "https://github.com/Reymart221111/blade/tree/master"
             },
             "funding": [
                 {
-                    "url": "https://github.com/jenssegers",
-                    "type": "github"
+                    "type": "github",
+                    "url": "https://github.com/jenssegers"
                 },
                 {
-                    "url": "https://opencollective.com/jenssegers-blade",
-                    "type": "open_collective"
+                    "type": "open_collective",
+                    "url": "https://opencollective.com/jenssegers-blade"
                 }
             ],
-            "time": "2024-03-16T21:41:52+00:00"
+            "time": "2025-04-20T13:32:14+00:00"
         },
         {
             "name": "laminas/laminas-escaper",
@@ -5984,7 +5994,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "jenssegers/blade": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

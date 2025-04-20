@@ -9,6 +9,12 @@
         "source": "https://github.com/codeigniter4/CodeIgniter4",
         "slack": "https://codeigniterchat.slack.com"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/reymart221111/blade"
+        }
+    ],
     "require": {
         "php": "^8.1 || ^8.2 || ^8.3 || ^8.4",
         "codeigniter4/framework": "^4.0",
@@ -23,7 +29,7 @@
         "illuminate/pagination": "^11.0",
         "illuminate/validation": "^11.0",
         "illuminate/view": "^11.0",
-        "jenssegers/blade": "2.0.1"
+        "jenssegers/blade": "dev-master"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",

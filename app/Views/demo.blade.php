@@ -2,6 +2,19 @@
 
 @section('content')
     <div class="table-responsive">
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <table class="table table-striped table-bordered">
             <thead class="table-dark">
                 <tr>
@@ -37,7 +50,7 @@
             </tbody>
         </table>
         <div class="mt-3">
-            {!! $users->linksHtml!!}
+            {!! $users->linksHtml !!}
         </div>
         <div class="mt-3">
             <a href="{{ route_to('users.create') }}" class="btn btn-primary me-2">
