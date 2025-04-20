@@ -28,12 +28,6 @@ class UserController extends BaseController
 
     public function store()
     {
-        $validatedData = RequestValidator::validate([
-            'name' => 'required|min:3|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|max:255',
-        ]);
-        
         User::create(StoreUserRequest::validateRequest());
         return redirect()->route('users.index')->with('success', 'User created successfully');
     }
@@ -50,7 +44,7 @@ class UserController extends BaseController
         $user = User::find($id);
         $this->redirectBackIfNotFound($user, 'User');
         $user->update(UpdateUserRequest::validateRequest());
-        return redirect()->route('users.index')->with('success', 'User updated successfully');
+        return redirect()->to(back_url(route_to('users.index')))->with('success', 'User updated successfully');
     }
 
     public function destroy($id)

@@ -70,9 +70,7 @@
                                     <button type="submit" class="btn btn-primary">
                                         Submit
                                     </button>
-                                    <a href="{{ previous_url() }}" class="btn btn-secondary">
-                                        Cancel
-                                    </a>
+                                    <a href="{{ back_url(route_to('users.index')) }}" class="btn btn-secondary">Cancel</a> 
                                 </div>
                             </div>
                         </form>
