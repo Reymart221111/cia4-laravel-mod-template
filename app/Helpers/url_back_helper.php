@@ -1,48 +1,42 @@
 <?php
 
-use CodeIgniter\HTTP\IncomingRequest;
-
 /**
- * Get the previous URL from:
- * - POST 'back' param (if POST)
- * - GET 'back' query param
- * - old('back') (if redirected with validation errors)
- * - HTTP_REFERER
- * - fallback route or current URL
+ * Universal “back” URL helper — no manual query‑strings needed.
  *
- * @param string|null $default
+ * Priority:
+ * 1. POSTed ‘back’ field (from hidden input), no matter the method
+ * 2. old('back')       (if redirected back with validation errors)
+ * 3. GET ‘back’ param  (if you ever choose to pass it)
+ * 4. HTTP_REFERER      (browser header when landing on form)
+ * 5. $default or current URL
+ *
+ * @param  string|null  $default  Fallback URL
  * @return string
  */
 function back_url(?string $default = null): string
 {
     $request = service('request');
 
-    // Check POST first if method is POST
-    if ($request->getMethod() === 'post') {
-        $back = $request->getPost('back');
-        if ($back) {
-            return $back;
-        }
+    // 1) Always prefer the hidden form field, no matter if PUT/POST/etc
+    if ($post = $request->getPost('back')) {
+        return $post;
     }
 
-    // Check old input (if redirected back with validation error)
-    $back = old('back');
-    if ($back) {
-        return $back;
+    // 2) If we’ve been redirected back after validation
+    if ($old = old('back')) {
+        return $old;
     }
 
-    // Check GET param
-    $back = $request->getGet('back');
-    if ($back) {
-        return $back;
+    // 3) If a 'back' GET param is present
+    if ($get = $request->getGet('back')) {
+        return $get;
     }
 
-    // Check HTTP_REFERER
-    $back = $_SERVER['HTTP_REFERER'] ?? null;
-    if ($back) {
-        return $back;
+    // 4) Otherwise, use the HTTP Referer
+    if (! empty($_SERVER['HTTP_REFERER'])) {
+        return $_SERVER['HTTP_REFERER'];
     }
 
-    // Fallback
+    // 5) Finally, fallback
     return $default ?? current_url();
 }
