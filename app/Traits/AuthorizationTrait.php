@@ -2,14 +2,14 @@
 
 namespace App\Traits;
 
-use App\Libraries\Gate;
+use App\Libraries\Authentication\Gate;
 
 trait AuthorizationTrait
 {
     /**
      * Get the Gate instance.
      *
-     * @return \App\Libraries\Gate
+     * @return \App\Libraries\Authentication\Gate
      */
     protected function gate()
     {

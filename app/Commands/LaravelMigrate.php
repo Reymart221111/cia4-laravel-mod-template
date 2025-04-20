@@ -9,6 +9,8 @@ use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Facade;
+use PDO;
+use PDOException;
 
 class LaravelMigrate extends BaseCommand
 {
@@ -24,6 +26,7 @@ class LaravelMigrate extends BaseCommand
     protected $repository;
     protected $migrator;
     protected $migrationPath;
+    protected $dbConfig = [];
 
     /**
      * Execute the command
@@ -31,6 +34,14 @@ class LaravelMigrate extends BaseCommand
     public function run(array $params)
     {
         try {
+            // Load database configuration first
+            $this->loadDatabaseConfig();
+
+            // Check if database exists before proceeding
+            if (!$this->checkDatabaseExists()) {
+                $this->promptAndCreateDatabase();
+            }
+
             $this->setupEnvironment();
 
             $action = $params[0] ?? 'up';
@@ -40,6 +51,194 @@ class LaravelMigrate extends BaseCommand
         }
     }
 
+    /**
+     * Load database configuration from environment
+     */
+    private function loadDatabaseConfig()
+    {
+        $this->dbConfig = [
+            'host'      => env('database.default.hostname'),
+            'driver'    => env('database.default.DBDriver'),
+            'database'  => env('database.default.database'),
+            'username'  => env('database.default.username'),
+            'password'  => env('database.default.password'),
+            'charset'   => env('database.default.DBCharset', 'utf8'),
+            'collation' => env('database.default.DBCollat', 'utf8_general_ci'),
+            'prefix'    => env('database.default.DBPrefix', ''),
+            'port'      => env('database.default.port'),
+        ];
+    }
+
+    /**
+     * Check if the specified database exists
+     */
+    private function checkDatabaseExists(): bool
+    {
+        try {
+            // Create DSN without database name
+            $driver = strtolower($this->dbConfig['driver']);
+
+            return match ($driver) {
+                'mysql', 'mariadb' => $this->checkMysqlDatabaseExists(),
+                'pgsql' => $this->checkPgsqlDatabaseExists(),
+                'sqlite' => file_exists($this->dbConfig['database']),
+                'sqlsrv' => $this->checkSqlsrvDatabaseExists(),
+                default => $this->handleUnsupportedDriver($driver, 'checking')
+            };
+        } catch (PDOException $e) {
+            CLI::error("Database connection error: " . $e->getMessage());
+            exit(1);
+        }
+    }
+
+    /**
+     * Prompt user and create database if confirmed
+     */
+    private function promptAndCreateDatabase()
+    {
+        CLI::write("Database '{$this->dbConfig['database']}' does not exist.", 'yellow');
+        $confirm = CLI::prompt('Would you like to create it?', ['y', 'n']);
+
+        if ($confirm === 'y') {
+            $this->createDatabase();
+        } else {
+            CLI::error('Database is required to continue. Aborting.');
+            exit(1);
+        }
+    }
+
+    /**
+     * Check if MySQL/MariaDB database exists
+     */
+    private function checkMysqlDatabaseExists(): bool
+    {
+        $dsn = "mysql:host={$this->dbConfig['host']};port={$this->dbConfig['port']}";
+        $pdo = new PDO($dsn, $this->dbConfig['username'], $this->dbConfig['password']);
+        $stmt = $pdo->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{$this->dbConfig['database']}'");
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Check if PostgreSQL database exists
+     */
+    private function checkPgsqlDatabaseExists(): bool
+    {
+        $dsn = "pgsql:host={$this->dbConfig['host']};port={$this->dbConfig['port']}";
+        $pdo = new PDO($dsn, $this->dbConfig['username'], $this->dbConfig['password']);
+        $stmt = $pdo->query("SELECT datname FROM pg_database WHERE datname = '{$this->dbConfig['database']}'");
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Check if SQL Server database exists
+     */
+    private function checkSqlsrvDatabaseExists(): bool
+    {
+        $dsn = "sqlsrv:Server={$this->dbConfig['host']},{$this->dbConfig['port']}";
+        $pdo = new PDO($dsn, $this->dbConfig['username'], $this->dbConfig['password']);
+        $stmt = $pdo->query("SELECT name FROM sys.databases WHERE name = '{$this->dbConfig['database']}'");
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Handle unsupported driver
+     */
+    private function handleUnsupportedDriver(string $driver, string $operation): bool
+    {
+        CLI::write("Warning: Auto-{$operation} not supported for '{$driver}'. Assuming database exists.", 'yellow');
+        return true;
+    }
+
+    /**
+     * Create the database
+     */
+    private function createDatabase()
+    {
+        try {
+            $driver = strtolower($this->dbConfig['driver']);
+            $database = $this->dbConfig['database'];
+
+            match ($driver) {
+                'mysql', 'mariadb' => $this->createMysqlDatabase(),
+                'pgsql' => $this->createPgsqlDatabase(),
+                'sqlite' => $this->createSqliteDatabase(),
+                'sqlsrv' => $this->createSqlsrvDatabase(),
+                default => throw new \Exception("Database driver '{$driver}' is not supported for auto-creation.")
+            };
+
+            CLI::write("Database '$database' created successfully.", 'green');
+        } catch (PDOException | \Exception $e) {
+            CLI::error("Failed to create database: " . $e->getMessage());
+            exit(1);
+        }
+    }
+
+    /**
+     * Create MySQL/MariaDB database
+     */
+    private function createMysqlDatabase(): void
+    {
+        $dsn = "mysql:host={$this->dbConfig['host']};port={$this->dbConfig['port']}";
+        $pdo = new PDO($dsn, $this->dbConfig['username'], $this->dbConfig['password']);
+
+        // Create database with proper character set and collation
+        $charset = $this->dbConfig['charset'];
+        $collation = $this->dbConfig['collation'];
+        $database = $this->dbConfig['database'];
+        $pdo->exec("CREATE DATABASE `$database` CHARACTER SET $charset COLLATE $collation");
+    }
+
+    /**
+     * Create PostgreSQL database
+     */
+    private function createPgsqlDatabase(): void
+    {
+        $dsn = "pgsql:host={$this->dbConfig['host']};port={$this->dbConfig['port']}";
+        $pdo = new PDO($dsn, $this->dbConfig['username'], $this->dbConfig['password']);
+        $database = $this->dbConfig['database'];
+        $pdo->exec("CREATE DATABASE \"$database\"");
+
+        // Set encoding if available
+        if (!empty($this->dbConfig['charset'])) {
+            $charset = $this->dbConfig['charset'];
+            $pdo->exec("ALTER DATABASE \"$database\" SET client_encoding TO '$charset'");
+        }
+    }
+
+    /**
+     * Create SQLite database
+     */
+    private function createSqliteDatabase(): void
+    {
+        $database = $this->dbConfig['database'];
+        $directory = dirname($database);
+
+        // Create directory if it doesn't exist
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        // Create empty SQLite file
+        file_put_contents($database, '');
+        chmod($database, 0644);
+    }
+
+    /**
+     * Create SQL Server database
+     */
+    private function createSqlsrvDatabase(): void
+    {
+        $dsn = "sqlsrv:Server={$this->dbConfig['host']},{$this->dbConfig['port']}";
+        $pdo = new PDO($dsn, $this->dbConfig['username'], $this->dbConfig['password']);
+        $database = $this->dbConfig['database'];
+        $pdo->exec("CREATE DATABASE [$database]");
+
+        // Set collation if specified
+        if (!empty($this->dbConfig['collation'])) {
+            $collation = $this->dbConfig['collation'];
+            $pdo->exec("ALTER DATABASE [$database] COLLATE $collation");
+        }
+    }
     /**
      * Setup all required dependencies
      */
@@ -56,17 +255,7 @@ class LaravelMigrate extends BaseCommand
     private function setupDatabase()
     {
         $this->capsule = new Capsule();
-        $this->capsule->addConnection([
-            'host'      => env('database.default.hostname'),
-            'driver'    => env('database.default.DBDriver'),
-            'database'  => env('database.default.database'),
-            'username'  => env('database.default.username'),
-            'password'  => env('database.default.password'),
-            'charset'   => env('database.default.DBCharset', 'utf8'),
-            'collation' => env('database.default.DBCollat', 'utf8_general_ci'),
-            'prefix'    => env('database.default.DBPrefix', ''),
-            'port'      => env('database.default.port'),
-        ]);
+        $this->capsule->addConnection($this->dbConfig);
 
         $this->capsule->setAsGlobal();
         $this->capsule->bootEloquent();
@@ -148,11 +337,11 @@ class LaravelMigrate extends BaseCommand
     {
         CLI::write('Dropping all tables...', 'yellow');
         $this->dropAllTables();
-        
+
         // Recreate migrations table
         CLI::write('Recreating migrations table...', 'yellow');
-        $this->setupRepository(); 
-        
+        $this->setupRepository();
+
         CLI::write('Running all migrations...', 'yellow');
         $this->handleUpAction();
         CLI::write('Database has been freshened.', 'green');

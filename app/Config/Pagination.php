@@ -14,7 +14,7 @@ class Pagination extends BaseConfig
     /**
      * Number of links to display on each side of current page
      */
-    public $window = 3;
+    public $window = 4;
     
     /**
      * Pagination renderers for different CSS frameworks

@@ -41,6 +41,13 @@ abstract class FormRequest
     protected $validationResult;
 
     /**
+     * Holds the successfully validated data subset.
+     * Populated after successful validation.
+     * @var array|null
+     */
+    protected ?array $validatedData = null;
+
+    /**
      * Constructor for FormRequest
      * 
      * Initializes the request, validator, and data
@@ -55,11 +62,23 @@ abstract class FormRequest
         // Combine POST data and FILES
         $this->data = array_merge($this->request->getPost(), $this->collectFiles());
 
-        // Apply preparation before validation
+        // --- Preparation ---
         $this->prepareForValidation();
 
-        // Automatically validate on instantiation
         $this->validate();
+
+        $this->handleValidationFailure();
+    }
+
+    protected function handleValidationFailure()
+    {
+        if ($this->fails()) {
+            $response = redirect()->back()
+                ->withInput()
+                ->with('errors', $this->errors());
+            $response->send();
+            exit();
+        }
     }
 
     /**
@@ -205,7 +224,7 @@ abstract class FormRequest
 
     /**
      * Perform validation with current rules and data
-     * 
+     *
      * @return bool True if validation passes, false otherwise
      */
     public function validate()
@@ -217,39 +236,98 @@ abstract class FormRequest
             $this->attributes()
         );
 
+        // *** Store validated data on success ***
+        if ($this->validationResult['success']) {
+            $this->validatedData = $this->validationResult['validated'] ?? [];
+        } else {
+            $this->validatedData = null; // Ensure it's null on failure
+        }
+
         return $this->validationResult['success'];
     }
 
     /**
      * Check if validation has failed
-     * 
+     *
      * @return bool True if validation failed, false otherwise
      */
     public function fails()
     {
+        // Ensure validation has run if checking failure status directly
+        // (Though constructor runs it, this makes fails() safer if called independently)
+        if (!isset($this->validationResult)) {
+            $this->validate();
+        }
         return !($this->validationResult['success'] ?? false);
     }
 
+
     /**
-     * Get only the validated data as an object
-     * 
+     * Get the validated data subset.
+     * Returns an empty array if validation failed or data is not available.
+     * (Keeping this defensive return is good practice, although the constructor
+     * exit should prevent this path in the main controller flow)
+     *
      * @param bool $asObject Whether to return as object (true) or array (false)
-     * @return mixed Object or array containing validated fields
+     * @return array|\stdClass Returns validated data as array/stdClass, or empty array/stdClass on failure.
      */
-    public function validated($asObject = false)
+    public function validated(bool $asObject = false): array|\stdClass
     {
-        $data = $this->validationResult['validated'] ?? [];
-        return $asObject ? (object) $data : $data;
+        // Fails check is technically redundant if constructor exits, but harmless
+        if ($this->fails() || is_null($this->validatedData)) {
+            return $asObject ? new \stdClass() : [];
+        }
+        return $asObject ? (object) $this->validatedData : $this->validatedData;
     }
 
     /**
      * Get validation errors by field
-     * 
+     *
      * @return array Array of error messages keyed by field name
      */
     public function errors()
     {
+        // Ensure validation has run
+        if (!isset($this->validationResult)) {
+            $this->validate();
+        }
         return $this->validationResult['errorsByField'] ?? [];
+    }
+
+
+    /**
+     * Magic method to access validated data as properties.
+     *
+     * Example: $request->name retrieves the validated 'name' field.
+     * Returns null if validation failed or the key doesn't exist in validated data.
+     *
+     * @param string $key The property name (field key)
+     * @return mixed|null The value of the validated field or null
+     */
+    public function __get(string $key): mixed
+    {
+        // Ensure validation has run successfully and data is available
+        if ($this->fails() || is_null($this->validatedData)) {
+            // Trigger warning for accessing before validation or on failure?
+            // trigger_error("Attempting to access property '{$key}' before successful validation or on validation failure.", E_USER_WARNING);
+            return null;
+        }
+
+        return $this->validatedData[$key] ?? null;
+    }
+
+    /**
+     * Magic method isset check for validated data properties.
+     *
+     * @param string $key
+     * @return bool
+     */
+    public function __isset(string $key): bool
+    {
+        if ($this->fails() || is_null($this->validatedData)) {
+            return false;
+        }
+        return isset($this->validatedData[$key]);
     }
 
     /**
@@ -258,10 +336,9 @@ abstract class FormRequest
      * This method creates an instance of the form request,
      * validates it, and throws an exception if validation fails
      * 
-     * @throws ValidationException When validation fails
-     * @return static The validated form request instance
+     * @param bool $asArray When true, return validated array; when false, return the FormRequest instance
      */
-    public static function validateRequest()
+    public static function validateRequest(bool $asArray = true): array|static
     {
         $instance = new static();
 
@@ -273,6 +350,8 @@ abstract class FormRequest
             throw new ValidationException($response);
         }
 
-        return $instance;
+        return $asArray
+            ? $instance->validated()
+            : $instance;
     }
 }
