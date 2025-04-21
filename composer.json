@@ -29,7 +29,9 @@
         "illuminate/pagination": "^11.0",
         "illuminate/validation": "^11.0",
         "illuminate/view": "^11.0",
-        "jenssegers/blade": "dev-master"
+        "jenssegers/blade": "dev-master",
+        "phpoption/phpoption": "^1.9",
+        "vlucas/phpdotenv": "^5.6"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",
