@@ -2,6 +2,8 @@
 
 namespace App\Facades;
 
+use App\Libraries\Authentication\Authentication;
+
 /**
  * Facade for the Authentication library.
  *
@@ -13,19 +15,19 @@ class Auth
     /**
      * The singleton instance of the Authentication library.
      *
-     * @var \App\Libraries\Authentication|null
+     * @var \App\Libraries\Authentication\Authentication|null
      */
     protected static $instance;
 
     /**
      * Retrieves the singleton instance of the Authentication library.
      *
-     * @return \App\Libraries\Authentication The Authentication instance.
+     * @return \App\Libraries\Authentication\Authentication The Authentication instance.
      */
     public static function getInstance()
     {
         if (!self::$instance) {
-            self::$instance = new \App\Libraries\Authentication();
+            self::$instance = new Authentication;
         }
         return self::$instance;
     }
