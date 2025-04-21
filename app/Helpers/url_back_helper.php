@@ -8,7 +8,7 @@
  * 2. old('back')       (if redirected back with validation errors)
  * 3. GET ‘back’ param  (if you ever choose to pass it)
  * 4. HTTP_REFERER      (browser header when landing on form)
- * 5. $default or current URL
+ * 5. $default uses route_to or current URL so use name routes to make it work
  *
  * @param  string|null  $default  Fallback URL
  * @return string
@@ -38,5 +38,5 @@ function back_url(?string $default = null): string
     }
 
     // 5) Finally, fallback
-    return $default ?? current_url();
+    return route_to($default) ?? current_url();
 }

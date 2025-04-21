@@ -11,7 +11,7 @@
                         <form method="POST" action="{{ route_to('users.update', $user->id) }}">
                             @csrf
                             @method('PUT')
-                            <input type="hidden" name="back" value="{{ back_url() }}">
+                            @back
                             <div class="row mb-3">
                                 <label for="name" class="col-md-4 col-form-label text-md-end">Name</label>
 

@@ -47,6 +47,7 @@ class BladeExtension
         $this->_registerMethodDirectives($blade);
         $this->_registerPermissionDirectives($blade);
         $this->_registerErrorDirectives($blade);
+        $this->_registerBackDirectives($blade);
 
         // Delegate component directive registration to the dedicated provider
         $componentProvider = new ComponentDirectiveProvider();
@@ -178,5 +179,14 @@ class BladeExtension
             ?>";
         });
         $blade->directive('enderror', fn() => "<?php unset(\$message, \$__fieldName, \$__bladeErrors); endif; ?>");
+    }
+
+    private function _registerBackDirectives(Blade $blade)
+    {
+        $blade->directive('back', function ($expression) {
+            $expression = trim($expression, "()'\"");
+            $default = $expression ? ", $expression" : '';
+            return "<?php echo '<input type=\"hidden\" name=\"back\" value=\"'.e(back_url($default)).'\">'; ?>";
+        });
     }
 }
