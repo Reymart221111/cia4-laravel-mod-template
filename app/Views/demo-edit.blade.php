@@ -65,7 +65,7 @@
                                     <button type="submit" class="btn btn-primary">
                                         Update User
                                     </button>
-                                    <a href="{{ back_url(route_to('users.index')) }}" class="btn btn-link">
+                                    <a href="{{ back_url() }}" class="btn btn-link">
                                         Cancel
                                     </a>
                                 </div>
