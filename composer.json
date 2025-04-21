@@ -9,20 +9,29 @@
         "source": "https://github.com/codeigniter4/CodeIgniter4",
         "slack": "https://codeigniterchat.slack.com"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/reymart221111/blade"
+        }
+    ],
     "require": {
         "php": "^8.1 || ^8.2 || ^8.3 || ^8.4",
         "codeigniter4/framework": "^4.0",
         "guzzlehttp/guzzle": "^7.9",
-        "illuminate/collections": "==10.0",
-        "illuminate/container": "==10.0",
-        "illuminate/contracts": "==10.0",
-        "illuminate/database": "^10.38",
-        "illuminate/events": "==10.0",
-        "illuminate/http": "^10.48",
-        "illuminate/pagination": "^10.48",
-        "illuminate/validation": "^10.48",
-        "illuminate/view": "==10.0",
-        "jenssegers/blade": "2.0"
+        "illuminate/collections": "^11.0",
+        "illuminate/container": "^11.0",
+        "illuminate/contracts": "^11.0",
+        "illuminate/database": "^11.0",
+        "illuminate/events": "^11.0",
+        "illuminate/hashing": "^11.0",
+        "illuminate/http": "^11.0",
+        "illuminate/pagination": "^11.0",
+        "illuminate/validation": "^11.0",
+        "illuminate/view": "^11.0",
+        "jenssegers/blade": "dev-master",
+        "phpoption/phpoption": "^1.9",
+        "vlucas/phpdotenv": "^5.6"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",

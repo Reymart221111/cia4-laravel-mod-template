@@ -7,6 +7,7 @@ use App\Libraries\Authentication\Gate;
 use App\Libraries\Providers\AuthServiceProvider;
 use App\Libraries\Validation\LaravelValidator;
 use CodeIgniter\Config\BaseService;
+use App\Libraries\Blade\BladeService;
 
 /**
  * Services Configuration file.
@@ -50,5 +51,20 @@ class Services extends BaseService
         $provider->register();
 
         return gate();
+    }
+
+    /**
+     * Return the BladeService instance
+     *
+     * @param bool $getShared
+     * @return BladeService
+     */
+    public static function blade(bool $getShared = true): BladeService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('blade');
+        }
+
+        return new BladeService();
     }
 }

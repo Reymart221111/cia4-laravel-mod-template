@@ -58,17 +58,4 @@ abstract class BaseController extends Controller
 
         // E.g.: $this->session = service('session');
     }
-
-    protected function redirectIfRecordNotFound($user)
-    {
-        if (!$user) {
-            $response = redirect()->back()
-                ->with('error', 'Selected record not found.');
-
-            $response->send();
-            exit;
-        }
-
-        return $user;
-    }
 }

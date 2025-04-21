@@ -97,5 +97,6 @@ class Autoload extends AutoloadConfig
         'route_active_checker_helper.php',
         'auth_helper.php',
         'authorization_helper.php',
+        'url_back_helper.php'
     ];
 }

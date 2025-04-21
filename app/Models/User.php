@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
+use App\Libraries\Eloquent\BaseModel;
 use App\Traits\HashedPasswordTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
-    use HashedPasswordTrait;
-    
     /**
      * The table associated with the model
      * 
@@ -22,4 +21,16 @@ class User extends Model
         'email',
         'password',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'password' => 'hashed',
+        ];
+    }
 }
