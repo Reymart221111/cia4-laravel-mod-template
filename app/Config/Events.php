@@ -24,12 +24,13 @@ use CodeIgniter\HotReloader\HotReloader;
  */
 
 Events::on('pre_system', static function (): void {
-
     // Load the Eloquent configuration
     service('eloquent');
     // Load the authentication configuration
     service('authorization');
-    
+});
+
+Events::on('pre_system', static function (): void {
     if (ENVIRONMENT !== 'testing') {
         if (ini_get('zlib.output_compression')) {
             throw FrameworkException::forEnabledZlibOutputCompression();
