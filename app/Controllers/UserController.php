@@ -28,7 +28,12 @@ class UserController extends BaseController
 
     public function store()
     {
-        User::create(StoreUserRequest::validateRequest());
+        $validatedData = RequestValidator::validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' =>'required|string|min:8',
+        ]);
+        User::create($validatedData->validated());
         return redirect()->route('users.index')->with('success', 'User created successfully');
     }
 
